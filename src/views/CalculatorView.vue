@@ -94,6 +94,7 @@ export default defineComponent({
             if (!this.chosedOperator) {
                 this.chosedOperator = operator;
                 this.inputValue = "";
+                console.log('test');
                 return;
             }
             this.calculate();
