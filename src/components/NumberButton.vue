@@ -1,7 +1,7 @@
 <template>
-    <button class="btn" @click="clickOnNumberHandler">
+    <div class="btn" @click="clickOnNumberHandler">
         {{ innerNumber }}
-    </button>
+    </div>
 </template>
 <script lang="ts">
 import { defineComponent } from "vue";
@@ -20,3 +20,9 @@ export default defineComponent({
     },
 });
 </script>
+<style lang="scss">
+.btn {
+    font-size: 2rem;
+    user-select: none;
+}
+</style>
