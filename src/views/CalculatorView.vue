@@ -31,9 +31,9 @@
             <div class="btns__col">
                 <OperatorButton
                     v-for="(operator, index) of $options.operators"
-                    @click-on-operator="testOperatorHandler"
+                    @click-on-operator="testOperatorHandler(operator.operator, operator.action)"
                     :key="index"
-                    :inner-operator="operator"
+                    :inner-operator="operator.operator"
                 />
             </div>
         </div>
@@ -42,12 +42,36 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 
+import Calculator from "@/models/Calculator";
+
 import NumberButton from "@/components/NumberButton.vue";
 import OperatorButton from "@/components/OperatorButton.vue";
 import ActionButton from "@/components/ActionButton.vue";
 
 export default defineComponent({
-    operators: ["/", "* ", "-", "+", "="],
+    // operators: [/", "*", "-", "+", "="],
+    operators: [
+        {
+            operator: "/",
+            action: "divide",
+        },
+        {
+            operator: "*",
+            action: "multiply",
+        },
+        {
+            operator: "-",
+            action: "minus",
+        },
+        {
+            operator: "+",
+            action: "plus",
+        },
+        {
+            operator: "=",
+            action: "calculate",
+        },
+    ],
     numbers: [7, 8, 9, 4, 5, 6, 1, 2, 3],
     actions: ["C", "+/-", "%"],
     components: {
@@ -90,11 +114,10 @@ export default defineComponent({
                 this.history[1] = +this.inputValue;
             }
         },
-        testOperatorHandler(operator: string): void {
+        testOperatorHandler(operator: string, action: string): void {
             if (!this.chosedOperator) {
                 this.chosedOperator = operator;
                 this.inputValue = "";
-                console.log('test2');
                 return;
             }
             this.calculate();
@@ -103,7 +126,7 @@ export default defineComponent({
             console.log(action);
         },
         calculate(): void {
-            console.log(this.history.reduce((a, b) => a + b, 0));
+            console.log(Calculator.sum(this.history));
         },
     },
 });

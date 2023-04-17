@@ -17,7 +17,7 @@ module.exports = {
         quotes: ["error", "double"],
         indent: ["error", 4],
         "linebreak-style": ["error", "windows"],
-        'vuejs-accessibility/click-events-have-key-events': 'off'
+        "vuejs-accessibility/click-events-have-key-events": "off",
     },
     overrides: [
         {
