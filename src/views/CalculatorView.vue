@@ -13,14 +13,14 @@
                 />
                 <NumberButton
                     v-for="(number, index) of $options.numbers"
-                    @click-on-number="testNumberHandler"
+                    @click-on-number="numberClickHandler"
                     :key="index"
                     :inner-number="number"
                 />
                 <div class="btns__row">
                     <NumberButton
                         :inner-number="0"
-                        @click-on-number="testNumberHandler"
+                        @click-on-number="numberClickHandler"
                     />
                     <ActionButton
                         :inner-action="','"
@@ -31,10 +31,16 @@
             <div class="btns__col">
                 <OperatorButton
                     v-for="(operator, index) of $options.operators"
-                    @click-on-operator="testOperatorHandler(operator.operator, operator.action)"
+                    @click-on-operator="
+                        operatorClickHandler(operator.operator, operator.action)
+                    "
                     :key="index"
                     :inner-operator="operator.operator"
                 />
+                <ActionButton
+                        :inner-action="'='"
+                        @click-on-action="calculate"
+                    />
             </div>
         </div>
     </div>
@@ -49,7 +55,6 @@ import OperatorButton from "@/components/OperatorButton.vue";
 import ActionButton from "@/components/ActionButton.vue";
 
 export default defineComponent({
-    // operators: [/", "*", "-", "+", "="],
     operators: [
         {
             operator: "/",
@@ -67,10 +72,6 @@ export default defineComponent({
             operator: "+",
             action: "plus",
         },
-        {
-            operator: "=",
-            action: "calculate",
-        },
     ],
     numbers: [7, 8, 9, 4, 5, 6, 1, 2, 3],
     actions: ["C", "+/-", "%"],
@@ -84,6 +85,7 @@ export default defineComponent({
             inputValue: "0",
             history: [0, 0],
             chosedOperator: "",
+            chosedOperatorName: "",
             expressionHasOperator: false,
         };
     },
@@ -99,7 +101,7 @@ export default defineComponent({
         },
     },
     methods: {
-        testNumberHandler(num: number): void {
+        numberClickHandler(num: number): void {
             if (!(num === 0 && this.inputExpression === "0")) {
                 if (this.inputValue === "0") {
                     this.inputValue = num.toString();
@@ -114,19 +116,75 @@ export default defineComponent({
                 this.history[1] = +this.inputValue;
             }
         },
-        testOperatorHandler(operator: string, action: string): void {
+        operatorClickHandler(operator: string, action: string): void {
             if (!this.chosedOperator) {
                 this.chosedOperator = operator;
+                this.chosedOperatorName = action;
                 this.inputValue = "";
                 return;
             }
-            this.calculate();
+            if (!this.inputValue) {
+                if (this.chosedOperator === operator) {
+                    this.clearOperator();
+                    return;
+                }
+                this.chosedOperator = operator;
+                this.chosedOperatorName = action;
+                return;
+            }
+            this.calculatorController(action);
         },
         testActionHandler(action: string): void {
             console.log(action);
         },
+        clearOperator(): void {
+            this.chosedOperator = "";
+            this.chosedOperatorName = "";
+        },
+        calculatorController(action: string): void {
+            switch (this.chosedOperatorName) {
+            case "plus":
+                this.sum();
+                break;
+            case "multiply":
+                this.multipy();
+                break;
+            default:
+                console.log(this.chosedOperatorName);
+                break;
+            }
+
+            if (!(this.chosedOperatorName === action)) {
+                const newOperator = this.$options.operators.find(
+                    (element: any) => element.action === action,
+                );
+                this.chosedOperator = newOperator.operator;
+                this.chosedOperatorName = action;
+
+                this.inputValue = "";
+                this.history[1] = 0;
+                return;
+            }
+
+            this.clearOperator();
+            this.history[1] = 0;
+        },
+        sum(): void {
+            this.history[0] = Calculator.sum(this.history);
+        },
+        minus(): void {
+            this.history[0] = Calculator.minus(this.history);
+        },
+        division(): void {
+            this.history[0] = Calculator.division(this.history);
+        },
+        multipy(): void {
+            this.history[0] = Calculator.multiply(this.history);
+        },
         calculate(): void {
-            console.log(Calculator.sum(this.history));
+            if (this.chosedOperatorName) {
+                this.calculatorController(this.chosedOperatorName);
+            }
         },
     },
 });
