@@ -6,10 +6,10 @@
         <div class="calculator__btns">
             <div class="btns__col">
                 <ActionButton
-                    v-for="(action, index) of $options.actions"
-                    @click-on-action="testActionHandler"
+                    v-for="(action, index) in $options.actions"
+                    @click-on-action="actionController(action.name)"
                     :key="index"
-                    :inner-action="action"
+                    :inner-action="action.action"
                 />
                 <NumberButton
                     v-for="(number, index) of $options.numbers"
@@ -24,7 +24,7 @@
                     />
                     <ActionButton
                         :inner-action="','"
-                        @click-on-action="testActionHandler"
+                        @click-on-action="actionController('fractional')"
                     />
                 </div>
             </div>
@@ -38,9 +38,9 @@
                     :inner-operator="operator.operator"
                 />
                 <ActionButton
-                        :inner-action="'='"
-                        @click-on-action="calculate"
-                    />
+                    :inner-action="'='"
+                    @click-on-action="actionCalculate"
+                />
             </div>
         </div>
     </div>
@@ -53,6 +53,11 @@ import Calculator from "@/models/Calculator";
 import NumberButton from "@/components/NumberButton.vue";
 import OperatorButton from "@/components/OperatorButton.vue";
 import ActionButton from "@/components/ActionButton.vue";
+
+interface IOperator {
+    operator: string;
+    action: string;
+}
 
 export default defineComponent({
     operators: [
@@ -74,7 +79,20 @@ export default defineComponent({
         },
     ],
     numbers: [7, 8, 9, 4, 5, 6, 1, 2, 3],
-    actions: ["C", "+/-", "%"],
+    actions: [
+        {
+            action: "C",
+            name: "clear",
+        },
+        {
+            action: "+/-",
+            name: "sign-change",
+        },
+        {
+            action: "%",
+            name: "percent",
+        },
+    ],
     components: {
         NumberButton,
         OperatorButton,
@@ -86,7 +104,6 @@ export default defineComponent({
             history: [0, 0],
             chosedOperator: "",
             chosedOperatorName: "",
-            expressionHasOperator: false,
         };
     },
     computed: {
@@ -95,9 +112,9 @@ export default defineComponent({
                 if (!this.inputValue) {
                     return `${this.history[0]} ${this.chosedOperator}`;
                 }
-                return `${this.history[0]} ${this.chosedOperator} ${this.history[1]}`;
+                return `${this.history[0]} ${this.chosedOperator} ${this.inputValue}`;
             }
-            return `${this.history[0]}`;
+            return this.inputValue;
         },
     },
     methods: {
@@ -105,24 +122,20 @@ export default defineComponent({
             if (!(num === 0 && this.inputExpression === "0")) {
                 if (this.inputValue === "0") {
                     this.inputValue = num.toString();
-                } else {
-                    this.inputValue += num.toString();
-                }
-
-                if (!this.chosedOperator) {
-                    this.history[0] = +this.inputValue;
                     return;
                 }
-                this.history[1] = +this.inputValue;
+                this.inputValue += num.toString();
             }
         },
         operatorClickHandler(operator: string, action: string): void {
             if (!this.chosedOperator) {
                 this.chosedOperator = operator;
                 this.chosedOperatorName = action;
+                this.history[0] = +this.inputValue;
                 this.inputValue = "";
                 return;
             }
+
             if (!this.inputValue) {
                 if (this.chosedOperator === operator) {
                     this.clearOperator();
@@ -132,10 +145,45 @@ export default defineComponent({
                 this.chosedOperatorName = action;
                 return;
             }
+
+            this.history[1] = +this.inputValue;
+
             this.calculatorController(action);
         },
-        testActionHandler(action: string): void {
-            console.log(action);
+        actionController(actionName: string): void {
+            switch (actionName) {
+            case "clear":
+                this.actionClear();
+                break;
+            case "sign-change":
+                this.actionSignChange();
+                break;
+            case "percent":
+                this.actionPercent();
+                break;
+            case "fractional":
+                this.actionFractional();
+                break;
+            default:
+                console.log(actionName);
+                break;
+            }
+        },
+        actionFractional(): void {
+            if (this.inputValue.indexOf(".") === -1) {
+                this.inputValue = `${this.inputValue}.`;
+            }
+        },
+        actionSignChange(): void {
+            this.inputValue = (+this.inputValue * (-1)).toString();
+        },
+        actionClear(): void {
+            this.clearOperator();
+            this.history = [0, 0];
+            this.inputValue = "0";
+        },
+        actionPercent(): void {
+            this.inputValue = (+this.inputValue / 100).toString();
         },
         clearOperator(): void {
             this.chosedOperator = "";
@@ -149,14 +197,19 @@ export default defineComponent({
             case "multiply":
                 this.multipy();
                 break;
-            default:
-                console.log(this.chosedOperatorName);
+            case "minus":
+                this.minus();
                 break;
+            case "divide":
+                this.division();
+                break;
+            default:
+                throw new Error("undefined operator");
             }
-
+            this.inputValue = this.history[0].toString();
             if (!(this.chosedOperatorName === action)) {
                 const newOperator = this.$options.operators.find(
-                    (element: any) => element.action === action,
+                    (element: IOperator) => element.action === action,
                 );
                 this.chosedOperator = newOperator.operator;
                 this.chosedOperatorName = action;
@@ -181,8 +234,9 @@ export default defineComponent({
         multipy(): void {
             this.history[0] = Calculator.multiply(this.history);
         },
-        calculate(): void {
+        actionCalculate(): void {
             if (this.chosedOperatorName) {
+                this.history[1] = +this.inputValue;
                 this.calculatorController(this.chosedOperatorName);
             }
         },
