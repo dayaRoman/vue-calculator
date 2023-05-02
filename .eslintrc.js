@@ -18,7 +18,7 @@ module.exports = {
         indent: ["error", 4],
         "linebreak-style": ["error", "windows"],
         "vuejs-accessibility/click-events-have-key-events": "off",
-        "no-trailing-spaces": ["error", { "skipBlankLines": true }]
+        "no-trailing-spaces": ["error", { skipBlankLines: true }],
     },
     overrides: [
         {

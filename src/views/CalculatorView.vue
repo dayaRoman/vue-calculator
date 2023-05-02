@@ -206,7 +206,9 @@ export default defineComponent({
             default:
                 throw new Error("undefined operator");
             }
+
             this.inputValue = this.history[0].toString();
+            
             if (!(this.chosedOperatorName === action)) {
                 const newOperator = this.$options.operators.find(
                     (element: IOperator) => element.action === action,
