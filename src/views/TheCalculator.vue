@@ -77,7 +77,7 @@ export default defineComponent({
             operator: "+",
             action: "plus",
         },
-    ],
+    ] as IOperator[],
     numbers: [7, 8, 9, 4, 5, 6, 1, 2, 3],
     actions: [
         {
@@ -165,8 +165,7 @@ export default defineComponent({
                 this.actionFractional();
                 break;
             default:
-                console.log(actionName);
-                break;
+                throw new Error("undefined action");
             }
         },
         actionFractional(): void {
@@ -175,7 +174,7 @@ export default defineComponent({
             }
         },
         actionSignChange(): void {
-            this.inputValue = (+this.inputValue * (-1)).toString();
+            this.inputValue = (+this.inputValue * -1).toString();
         },
         actionClear(): void {
             this.clearOperator();
@@ -185,6 +184,12 @@ export default defineComponent({
         actionPercent(): void {
             this.inputValue = (+this.inputValue / 100).toString();
         },
+        actionCalculate(): void {
+            if (this.chosedOperatorName) {
+                this.history[1] = +this.inputValue;
+                this.calculatorController(this.chosedOperatorName);
+            }
+        },
         clearOperator(): void {
             this.chosedOperator = "";
             this.chosedOperatorName = "";
@@ -192,55 +197,43 @@ export default defineComponent({
         calculatorController(action: string): void {
             switch (this.chosedOperatorName) {
             case "plus":
-                this.sum();
+                this.history[0] = Calculator.sum(this.history);
                 break;
             case "multiply":
-                this.multipy();
+                this.history[0] = Calculator.multiply(this.history);
                 break;
             case "minus":
-                this.minus();
+                this.history[0] = Calculator.minus(this.history);
                 break;
             case "divide":
-                this.division();
+                this.history[0] = Calculator.division(this.history);
                 break;
             default:
                 throw new Error("undefined operator");
             }
 
+            this.updateInputExpression(action);
+        },
+        updateInputExpression(chosedAction: string): void {
             this.inputValue = this.history[0].toString();
-            
-            if (!(this.chosedOperatorName === action)) {
-                const newOperator = this.$options.operators.find(
-                    (element: IOperator) => element.action === action,
-                );
-                this.chosedOperator = newOperator.operator;
-                this.chosedOperatorName = action;
 
-                this.inputValue = "";
-                this.history[1] = 0;
+            if (!(this.chosedOperatorName === chosedAction)) {
+                this.copyNextOperator(chosedAction);
                 return;
             }
 
             this.clearOperator();
             this.history[1] = 0;
         },
-        sum(): void {
-            this.history[0] = Calculator.sum(this.history);
-        },
-        minus(): void {
-            this.history[0] = Calculator.minus(this.history);
-        },
-        division(): void {
-            this.history[0] = Calculator.division(this.history);
-        },
-        multipy(): void {
-            this.history[0] = Calculator.multiply(this.history);
-        },
-        actionCalculate(): void {
-            if (this.chosedOperatorName) {
-                this.history[1] = +this.inputValue;
-                this.calculatorController(this.chosedOperatorName);
-            }
+        copyNextOperator(newChosedAction: string): void {
+            const newOperator = this.$options.operators.find(
+                (element: IOperator) => element.action === newChosedAction,
+            );
+            this.chosedOperator = newOperator.operator;
+            this.chosedOperatorName = newChosedAction;
+
+            this.inputValue = "";
+            this.history[1] = 0;
         },
     },
 });
